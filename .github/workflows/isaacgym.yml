@@ -1,0 +1,20 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout github-actions (this repo)
+      uses: actions/checkout@v3
+
+    - name: Clone isaacgym (other repo)
+      env:
+        PAT: ${{ secrets.ISAACGYM }}
+      run: |
+        git clone https://$PAT@github.com/kingature/isaacgym.git
