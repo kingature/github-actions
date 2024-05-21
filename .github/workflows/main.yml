@@ -1,0 +1,75 @@
+name: Install and Run Singularity
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-run-singularity:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up environment
+      run: echo "DEBIAN_FRONTEND=noninteractive" >> $GITHUB_ENV
+
+    - name: Update and install initial dependencies
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update && sudo apt-get install -y wget tar
+
+    - name: Install dependencies for Singularity
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update && sudo apt-get install -y \
+          build-essential \
+          libssl-dev \
+          uuid-dev \
+          libgpgme11-dev \
+          squashfs-tools \
+          libseccomp-dev \
+          pkg-config \
+          libglib2.0-dev \
+          libfuse-dev \
+          libfuse3-dev
+
+    - name: Install Go
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz && \
+        sudo tar -C /usr/local -xzvf go1.22.3.linux-amd64.tar.gz && \
+        rm go1.22.3.linux-amd64.tar.gz && \
+        echo 'export GOPATH=${HOME}/go' >> ~/.bashrc && \
+        echo 'export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin' >> ~/.bashrc && \
+        source ~/.bashrc && \
+        go version
+
+    - name: Install Singularity
+      env:
+        GOPATH: ${{ github.workspace }}/go
+        PATH: /usr/local/go/bin:${{ github.workspace }}/go/bin:${{ runner.tool_cache }}/go/bin:${{ runner.temp }}/go/bin:${{ github.workspace }}/go/bin:/usr/local/go/bin:$PATH
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        mkdir -p $GOPATH/src/github.com/sylabs && \
+        cd $GOPATH/src/github.com/sylabs && \
+        wget https://github.com/sylabs/singularity/releases/download/v4.1.3/singularity-ce-4.1.3.tar.gz && \
+        tar -xzf singularity-ce-4.1.3.tar.gz && \
+        rm singularity-ce-4.1.3.tar.gz && \
+        cd singularity-ce-4.1.3 && \
+        ./mconfig && \
+        make -C ./builddir && \
+        sudo make -C ./builddir install && \
+        singularity --version
+
+    - name: Run Singularity script
+      run: |
+        ./singularity/build.sh
