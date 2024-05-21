@@ -69,4 +69,7 @@ jobs:
         singularity --version
 
     - name: Run Singularity script
-      run: ./singularity/build.sh
+      run: |
+        pwd
+        ls
+        # ./singularity/build.sh
