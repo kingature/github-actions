@@ -70,6 +70,7 @@ jobs:
 
     - name: Run Singularity script
       run: |
-        pwd
-        ls
+         ls ${{ github.workspace }}
+    - run: |
+        echo "Current directory: ${{ github.workspace }}"
         # ./singularity/build.sh
